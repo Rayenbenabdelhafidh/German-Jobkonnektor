@@ -41,3 +41,18 @@ export const NAV_KEYS: RouteKey[] = [
   "candidates",
   "contact",
 ];
+
+/**
+ * Appends a trailing slash if missing.
+ *
+ * `path()` never includes one, since Next's own `<Link>`/router already
+ * append it automatically at render time (next.config.ts sets
+ * `trailingSlash: true`, required for GitHub Pages' static file serving).
+ * That automatic handling only covers Next-rendered navigation, though — it
+ * doesn't reach hand-built absolute URL strings such as the sitemap entries
+ * and canonical/hreflang tags in lib/seo.ts, which must match the real
+ * served URL (…/de/, not …/de) themselves.
+ */
+export function withTrailingSlash(value: string): string {
+  return value.endsWith("/") ? value : `${value}/`;
+}

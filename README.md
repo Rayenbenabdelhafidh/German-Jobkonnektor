@@ -7,9 +7,90 @@ German (default), English, Arabic (RTL) and French, built with Next.js 16
 ```bash
 npm install
 npm run dev     # http://localhost:3000  → redirects to /de
-npm run build
-npm start
+npm run build   # writes the static export to out/
+npm start       # serves out/ locally at http://localhost:3000
 ```
+
+---
+
+## Deployed on GitHub Pages
+
+Live at <https://rayenbenabdelhafidh.github.io/German-Jobkonnektor/>.
+
+The site is a fully static export (`output: "export"` in `next.config.ts`) —
+GitHub Pages has no Node.js server or edge runtime, so every page, the
+sitemap and robots.txt are all pre-rendered to plain files at build time.
+`.github/workflows/deploy.yml` builds and publishes automatically on every
+push to `main` (or manually via the Actions tab's "Run workflow" button).
+
+**One-time repo setting required:** in **Settings → Pages**, set **Source**
+to **"GitHub Actions"** (not "Deploy from a branch"). Without this the
+workflow runs but nothing gets published.
+
+### How the GitHub Pages base path works
+
+This is a *project* Pages site (`<user>.github.io/German-Jobkonnektor/`), not
+a user/org root site, so every asset and route must live under
+`/German-Jobkonnektor`. That prefix is applied only when `GITHUB_PAGES=true`
+(set by the workflow's build step) — plain `npm run dev` / `npm run build`
+stay unprefixed, so local development is unaffected:
+
+```ts
+// next.config.ts
+const isGithubPages = process.env.GITHUB_PAGES === "true";
+const basePath = isGithubPages ? "/German-Jobkonnektor" : "";
+```
+
+`<Link>`, `useRouter()`, `next/image`, `next/font` and every CSS/JS chunk
+Next.js manages are automatically prefixed with this value — none of that
+required touching component code. The few places that build a URL by hand
+(canonical/hreflang tags, `sitemap.xml`, `robots.txt` — see `lib/seo.ts`,
+`app/sitemap.ts`, `app/robots.ts`) bake it in via `COMPANY.siteUrl` in
+`lib/config.ts`, which is now the real deployed origin+path instead of a
+placeholder custom domain.
+
+### What changed for static export, and why
+
+| Change | Why |
+|---|---|
+| `output: "export"` | GitHub Pages only serves static files; there's no server to run Next's default rendering. |
+| `basePath` / `assetPrefix` (gated on `GITHUB_PAGES`) | The site lives under `/German-Jobkonnektor`, not the domain root. |
+| `trailingSlash: true` | Next's own recommendation for static hosts: emits `de/branchen/index.html` per route, which is the form a plain file server (GitHub Pages included) resolves correctly with or without a trailing slash in the request. |
+| `images.unoptimized: true` | `output: "export"` has no server to run the on-demand Image Optimization API — Next throws a build error otherwise. `next/image` now serves the original file directly; sizing and the build-time blur placeholder are unaffected, only the automatic AVIF/WebP re-encoding is lost (there is no static-hosting equivalent of that). |
+| `redirects()` removed → `app/(root)/page.tsx` added | `redirects()` requires a server and is silently ignored under `output: "export"`. The root `/` → `/de` redirect is now a real static page (its own root layout, same pattern already used by `(site)` and `(admin)`) that does the same redirect via `<meta http-equiv="refresh">`, a `router.replace()` fallback, and a visible link — in that order of precedence. |
+| `headers()` removed | Same reason (silently ignored under static export) — but unlike the redirect, there is genuinely no way to send HTTP response headers (HSTS, X-Frame-Options, etc.) from a static file host: GitHub Pages has no server-side or edge hook for that at all, on any Next.js config. Removed rather than left in as dead, misleading configuration. |
+| `public/.nojekyll` | GitHub Pages runs Jekyll processing by default, which ignores any file or folder starting with `_` — that would silently delete the entire `_next/` folder (all JS/CSS) on every deploy. This file disables that processing. |
+| `COMPANY.siteUrl` updated | Canonical URLs, hreflang tags, the sitemap and the JSON-LD now point at the real GitHub Pages URL instead of the placeholder `german-jobkonnektor.de` domain. |
+| `robots.ts` disallow path | `Disallow: /admin` only ever matched a path that doesn't exist on this deployment; crawlers see `/German-Jobkonnektor/admin/`. |
+| `package.json` `start` script | `next start` cannot run against an `output: "export"` build (Next's own error message points at this exact fix) — it now serves `out/` with `serve` instead. |
+
+Nothing else changed: no component, page, translation, image, form, or route
+was touched. Verified after these changes, serving the export locally under
+the real `/German-Jobkonnektor/` subpath: all four languages, RTL mirroring,
+the candidate/employer forms (including the transport-industry conditional
+uploads), the cookie-gated Google Map (still zero requests to Google before
+consent), and the language switcher all work identically to before.
+
+### Known static-export limitation (not introduced by this change)
+
+Next.js 16.3.5's client-side route prefetching for pages nested under a
+dynamic segment (`[lang]`) requests a differently-shaped URL than what
+`output: "export"` actually writes to disk, so the browser console logs a
+404 for each prefetch attempt. This is a Next.js static-export characteristic
+for dynamic segments — confirmed present with or without `basePath` and
+`trailingSlash`, so it isn't something these deployment changes caused or can
+fix from application code. It's cosmetic only: it doesn't affect page
+content, and clicking through the site still navigates correctly, confirmed
+in-browser under the real GitHub Pages subpath.
+
+A second, unrelated static-export characteristic: the custom-designed
+"page not found" screen only appears for an in-app navigation to a missing
+page (client-side routing, already loaded). A cold hit on a URL that never
+existed — including GitHub Pages' own catch-all `404.html` — shows Next's
+generic default 404 instead. This is inherent to static hosting in general
+(a static host cannot run a server-side router to decide which language's
+design to show for an arbitrary unmatched path) and isn't specific to GitHub
+Pages or to this deployment configuration.
 
 ---
 

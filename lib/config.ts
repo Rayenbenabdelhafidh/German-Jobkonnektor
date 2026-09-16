@@ -25,8 +25,13 @@ export const COMPANY = {
   vatId: "USt-IdNr. PLATZHALTER",
   taxNumber: "Steuernummer PLATZHALTER",
 
-  // Used for canonical URLs and hreflang tags
-  siteUrl: "https://www.german-jobkonnektor.de",
+  // Used for canonical URLs, hreflang tags, sitemap.xml, robots.txt and the
+  // JSON-LD structured data. Deployed on GitHub Pages as a project site, so
+  // this must include the repository name — GitHub serves everything from
+  // https://rayenbenabdelhafidh.github.io/German-Jobkonnektor/, not from the
+  // domain root. Swap this back to a custom domain's root URL (no trailing
+  // slash) if the site later moves off github.io.
+  siteUrl: "https://rayenbenabdelhafidh.github.io/German-Jobkonnektor",
 
   // Geo coordinates of Schneeheideanger 3, 80937 München
   geo: { lat: 48.1899, lng: 11.5423 },
