@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --header-height: 4.5rem;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-height) + 1rem);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white text-ink antialiased;
+    font-family: var(--font-latin-body), system-ui, sans-serif;
+  }
+
+  /* Arabic uses Cairo for both body and display text. */
+  html[lang="ar"] body,
+  html[lang="ar"] .font-display {
+    font-family: var(--font-arabic), system-ui, sans-serif;
+  }
+
+  .font-display {
+    font-family: var(--font-latin-display), system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display text-navy;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Visible, consistent focus ring for keyboard users. */
+  :focus-visible {
+    outline: 3px solid #f28c28;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Arabic numerals inside Arabic text still read best as Western digits
+     for phone numbers and postcodes, which are copied verbatim. */
+  html[lang="ar"] .numeric {
+    font-feature-settings: "lnum";
+    direction: ltr;
+    display: inline-block;
+    unicode-bidi: embed;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-content px-5 sm:px-6 lg:px-8;
+  }
+
+  .section {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-amber;
+  }
+
+  .prose-legal p {
+    @apply mb-4 leading-relaxed text-muted;
+  }
+
+  .prose-legal p:last-child {
+    @apply mb-0;
+  }
+}
+
+@layer components {
+  /* Darkens the hero photograph behind the headline. The strong side follows
+     the reading direction: left in German and French, right in Arabic, so the
+     white text always sits on the dark part of the image. */
+  .hero-scrim {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(5, 17, 34, 0.88) 0%,
+        rgba(5, 17, 34, 0.70) 45%,
+        rgba(5, 17, 34, 0.30) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(5, 17, 34, 0.30) 0%,
+        rgba(5, 17, 34, 0.50) 100%
+      );
+  }
+
+  [dir="rtl"] .hero-scrim {
+    background:
+      linear-gradient(
+        270deg,
+        rgba(5, 17, 34, 0.88) 0%,
+        rgba(5, 17, 34, 0.70) 45%,
+        rgba(5, 17, 34, 0.30) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(5, 17, 34, 0.30) 0%,
+        rgba(5, 17, 34, 0.50) 100%
+      );
+  }
+}
+
+@layer utilities {
+  /* Mirrors icons that encode direction (arrows, chevrons) in RTL.
+     Applied via the `.rtl-flip` class on the icon itself. */
+  [dir="rtl"] .rtl-flip {
+    transform: scaleX(-1);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Scroll-reveal animation, driven by components/ui/Reveal.tsx.
+   Elements are visible by default so the page is readable with JS disabled;
+   Reveal only adds the hidden state once it has mounted. */
+.reveal-ready {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.reveal-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal-ready,
+  .reveal-in {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
