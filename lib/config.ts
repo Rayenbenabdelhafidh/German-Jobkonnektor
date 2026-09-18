@@ -13,13 +13,11 @@ export const COMPANY = {
   city: "München",
   country: "Deutschland",
 
-  // TODO: replace with the real address before going live
-  email: "EMAIL_PLACEHOLDER@german-jobkonnektor.de",
+  email: "contact@germanjobkonnektor.com",
 
-  // TODO: replace with the real number before going live.
   // Format: international, no spaces — used for tel: and wa.me links.
-  phone: "+49000000000",
-  phoneDisplay: "+49 (0) 000 000 000",
+  phone: "+4917641254122",
+  phoneDisplay: "+49 176 41254122",
 
   // TODO: replace with the real VAT / tax IDs before going live
   vatId: "USt-IdNr. PLATZHALTER",
